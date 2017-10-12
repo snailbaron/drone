@@ -1,0 +1,6 @@
+.vs/
+/3p/
+/bin/
+/build/
+*.vcxproj.user
+*.swp
