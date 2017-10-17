@@ -9,8 +9,19 @@ sf::Transform Position::transform() const
     return transform;
 }
 
+void Movement::setInput(const Vector<double>& input)
+{
+    _input = input;
+    _input.normalize();
+}
+
 void Movement::updatePosition(Position& position, double delta)
 {
-    velocity.decreaseBy(deceleration * delta);
-    position.location += velocity * delta;
+    auto inputAcceleration = _acceleration + _deceleration;
+
+    _velocity += _input * inputAcceleration * delta;
+    _velocity.capLength(_maxSpeed);
+
+    _velocity.decreaseBy(_deceleration * delta);
+    position.location += _velocity * delta;
 }

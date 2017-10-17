@@ -56,9 +56,12 @@ struct Vector {
 
     void setLength(const T& newLength)
     {
-        assert(length() > 0);
+        auto currentLength = length();
+        if (currentLength == 0) {
+            return;
+        }
 
-        double ratio = newLength / length();
+        auto ratio = newLength / currentLength;
         x *= ratio;
         y *= ratio;
     }

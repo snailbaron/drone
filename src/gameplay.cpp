@@ -7,6 +7,7 @@
 Gameplay::Gameplay()
 {
     _drone = std::make_unique<Drone>();
+    _drone->position->location.y = 10.0;
 
     _camera.follow(_drone->position);
 

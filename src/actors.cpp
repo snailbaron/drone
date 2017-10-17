@@ -37,13 +37,13 @@ Drone::Drone()
     position = std::make_shared<Position>();
 
     movement = std::make_shared<Movement>();
-    movement->maxSpeed = 4.0;
+    movement->setMaxSpeed(4.0);
 
     auto fullAccelerationTime = 0.3;
     auto fullDecelerationTime = 0.2;
 
-    movement->acceleration = movement->maxSpeed / fullAccelerationTime;
-    movement->deceleration = movement->maxSpeed / fullDecelerationTime;
+    movement->setAcceleration(movement->maxSpeed() / fullAccelerationTime);
+    movement->setDeceleration(movement->maxSpeed() / fullDecelerationTime);
 }
 
 void Drone::update(double delta)
@@ -88,8 +88,65 @@ void Obstacle::render(Screen& screen, sf::Transform transform) const
     screen.window().draw(shape, transform);
 }
 
+
+
+class EnemyBehavior : public Task {
+public:
+    EnemyBehavior(
+            std::weak_ptr<Position> position,
+            std::weak_ptr<Movement> movement)
+        : _position(position)
+        , _movement(movement)
+    {
+        _behavior = std::make_unique<Sequence>(
+            QuickTask([this]() {
+                _targetPoint.x = rand() % 3;
+                _targetPoint.y = rand() % 3;
+            }),
+            MoveTo(&_targetPoint, _position, _movement),
+            Wait(3.0)
+        );
+
+        _behavior->initialize();
+    }
+
+    Status update(double delta)
+    {
+        auto status = _behavior->update(delta);
+        if (status != Status::Running) {
+            _behavior->finalize();
+            _behavior->initialize();
+        }
+        return Status::Running;
+    }
+
+private:
+    std::weak_ptr<Position> _position;
+    std::weak_ptr<Movement> _movement;
+
+    std::unique_ptr<Task> _behavior;
+
+    Vector<double> _targetPoint;
+};
+
+Enemy::Enemy()
+{
+    behavior = std::make_unique<EnemyBehavior>(position, movement);
+    behavior->initialize();
+
+    movement->setMaxSpeed(4.0);
+
+    auto fullAccelerationTime = 0.3;
+    auto fullDecelerationTime = 0.2;
+
+    movement->setAcceleration(movement->maxSpeed() / fullAccelerationTime);
+    movement->setDeceleration(movement->maxSpeed() / fullDecelerationTime);
+}
+
 void Enemy::update(double delta)
 {
+    behavior->update(delta);
+    movement->updatePosition(*position, delta);
 }
 
 void Enemy::render(Screen& screen, sf::Transform transform) const

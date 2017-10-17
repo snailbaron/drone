@@ -205,9 +205,9 @@
     <ClInclude Include="gfx_utils.hpp" />
     <ClInclude Include="random.hpp" />
     <ClInclude Include="screen.hpp" />
-    <ClInclude Include="strategies.hpp" />
     <ClInclude Include="tasks.hpp" />
     <ClInclude Include="timer.hpp" />
+    <ClInclude Include="utils.hpp" />
     <ClInclude Include="vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

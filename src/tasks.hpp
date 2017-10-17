@@ -1,74 +1,83 @@
 #pragma once
 
-#include "vector.hpp"
+#include "utils.hpp"
 
-#include <vector>
-#include <queue>
+#include <initializer_list>
 #include <memory>
+#include <vector>
+#include <functional>
+#include <any>
 #include <type_traits>
 
 class Task {
 public:
+    enum class Status {
+        Running,
+        Success,
+        Failure,
+    };
+
     virtual ~Task() {}
 
-    virtual bool finished() const { return _finished; }
-    virtual void update(double delta) = 0;
+    virtual void initialize() {}
+    virtual Status update(double delta) = 0;
+    virtual void finalize() {}
+};
+
+class QuickTask : public Task {
+public:
+    QuickTask(std::function<std::function<Status(double)>()> generator);
+    QuickTask(std::function<Status(double)> action);
+    QuickTask(std::function<void()> action);
+
+    void initialize() override;
+    Status update(double delta) override;
+    void finalize() override;
+
+private:
+    std::function<std::function<Status(double)>()> _generator;
+    std::function<Status(double)> _action;
+};
+
+class TaskList : public Task {
+public:
+    template <class... Ts>
+    TaskList(Ts&&... tasks)
+    {
+        static_assert(std::conjunction<std::is_base_of<Task, Ts>...>(),
+            "TaskList may only accept Tasks in constructor");
+
+        copyToPtrContainer(_tasks, std::forward<Ts>(tasks)...);
+        _current = _tasks.end();
+    }
+
+    void initialize() override;
+    void finalize() override;
 
 protected:
-    bool _finished = false;
-};
-
-template <class T1, class... Ts>
-struct AreTasks : std::bool_constant<
-    std::is_base_of_v<Task, T1> && AreTasks<Ts>::value> {};
-
-template <class T>
-struct AreTasks<T> : std::bool_constant<std::is_base_of_v<Task, T>> {};
-
-template <class T, class... Args>
-std::unique_ptr<Task> task(Args&&... args)
-{
-    static_assert(AreTasks<Args...>(), "make can only make tasks");
-
-    return std::make_unique<T>(std::forward<Args>(args)...);
-}
-
-class Wait : public Task {
-public:
-    Wait(double timeToWait) : _timeRemaining(timeToWait) {}
-
-    void update(double delta) override
-    {
-        _timeRemaining -= delta;
-        if (_timeRemaining <= 0) {
-            _finished = true;
-        }
-    }
+    Task& currentTask() { return **_current; }
+    void next() { _current++; }
+    bool done() { return _current == _tasks.end(); }
 
 private:
-    double _timeRemaining;
+    using TaskVector = std::vector<std::unique_ptr<Task>>;
+
+    TaskVector _tasks;
+    TaskVector::iterator _current;
 };
 
-class Loop : public Task {
+class Sequence : public TaskList {
 public:
-    Loop(std::initializer_list<std::unique_ptr<Task>> tasks)
-        : _tasks(tasks)
-    { }
+    template <class... Tasks>
+    Sequence(Tasks&&... tasks) : TaskList(std::forward<Tasks>(tasks)...) {}
 
-    void update(double delta) override
-    {
-        while (!_tasks.empty() && _tasks.front()->finished()) {
-            _tasks.pop();
-        }
+    Status update(double delta) override;
+};
 
-        if (_tasks.empty()) {
-            _finished = true;
-            return;
-        }
+class Select : public TaskList {
+public:
+    template <class... Tasks>
+    Select(Tasks&&... tasks) : TaskList(std::forward<Tasks>(tasks)...) {}
 
-        _tasks.front()->update(delta);
-    }
-
-private:
-    std::vector<std::unique_ptr<Task>> _tasks;
+    Status update(double delta) override;
 };

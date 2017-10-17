@@ -28,15 +28,7 @@ void KeyboardMovementController::applyInput(double delta) const
         return;
     }
 
-    auto input = _inputState.cast<double>();
-    input.capLength(1.0);
-
-    // Acceleration used to compensate for constant deceleration
-    auto inputAcceleration =
-        lockedMovement->acceleration + lockedMovement->deceleration;
-
-    lockedMovement->velocity += input * inputAcceleration * delta;
-    lockedMovement->velocity.capLength(lockedMovement->maxSpeed);
+    lockedMovement->setInput(_inputState.cast<double>());
 }
 
 void MouseLookController::processInput(const sf::Event& event)

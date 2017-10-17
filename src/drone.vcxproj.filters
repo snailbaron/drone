@@ -39,10 +39,10 @@
     <ClCompile Include="components.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tasks.cpp">
+    <ClCompile Include="random.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="random.cpp">
+    <ClCompile Include="tasks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,13 +80,13 @@
     <ClInclude Include="components.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="strategies.hpp">
+    <ClInclude Include="random.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tasks.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="random.hpp">
+    <ClInclude Include="utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
